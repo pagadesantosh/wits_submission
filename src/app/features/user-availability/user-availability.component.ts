@@ -3,8 +3,10 @@ import {
   Component,
   computed,
   inject,
+  input,
   OnDestroy,
   OnInit,
+  output,
   signal,
 } from '@angular/core';
 import {
@@ -33,6 +35,9 @@ export class UserAvailabilityComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly checkerService = inject(UsernameCheckerService);
   private readonly destroy$ = new Subject<void>();
+
+  readonly embedded = input(false);
+  readonly usernameRegistered = output<string>();
 
   readonly checkStatus = signal<CheckStatus>('idle');
   readonly submittedPayload = signal<string | null>(null);
@@ -131,6 +136,7 @@ export class UserAvailabilityComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.submittedPayload.set(JSON.stringify(payload, null, 2));
       this.isSubmitting.set(false);
+      this.usernameRegistered.emit(payload.username);
     }, 600);
   }
 

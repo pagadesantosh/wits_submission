@@ -1,104 +1,111 @@
 
-<section class="min-vh-100 bg-light d-flex flex-column align-items-center justify-content-center p-4">
-  <header class="text-center mb-4">
-    <h1 class="h2 fw-bold mb-1">User Identity Verification</h1>
-    <p class="text-muted mb-0">Reserve your unique username to get started.</p>
-  </header>
+<ng-container *ngIf="!embedded(); else embeddedForm">
+  <section class="min-vh-100 bg-light d-flex flex-column align-items-center justify-content-center p-4">
+    <header class="text-center mb-4">
+      <h1 class="h2 fw-bold mb-1">User Identity Verification</h1>
+      <p class="text-muted mb-0">Reserve your unique username to get started.</p>
+    </header>
 
-  <!-- success state -->
-  <div *ngIf="submittedPayload(); else formView" class="card shadow-sm text-center p-4" style="width: 100%; max-width: 480px;">
-    <div class="d-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-25 mx-auto mb-3"
-         style="width: 56px; height: 56px; font-size: 1.5rem;">
-      <span class="text-success fw-bold">✓</span>
+    <!-- success state -->
+    <div *ngIf="submittedPayload(); else formCard" class="card shadow-sm text-center p-4" style="width: 100%; max-width: 480px;">
+      <div class="d-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-25 mx-auto mb-3"
+           style="width: 56px; height: 56px; font-size: 1.5rem;">
+        <span class="text-success fw-bold">✓</span>
+      </div>
+      <h2 class="h5 fw-bold mb-1">Registration Complete</h2>
+      <p class="text-muted small mb-3">Your username has been registered successfully.</p>
+      <pre class="bg-light border rounded p-3 text-start font-monospace small mb-4" style="white-space: pre-wrap; word-break: break-word;">{{ submittedPayload() }}</pre>
+      <button class="btn btn-outline-secondary" (click)="onReset()">Register another</button>
     </div>
-    <h2 class="h5 fw-bold mb-1">Registration Complete</h2>
-    <p class="text-muted small mb-3">Your username has been registered successfully.</p>
-    <pre class="bg-light border rounded p-3 text-start font-monospace small mb-4" style="white-space: pre-wrap; word-break: break-word;">{{ submittedPayload() }}</pre>
-    <button class="btn btn-outline-secondary" (click)="onReset()">Register another</button>
-  </div>
 
-  <!-- form -->
-  <ng-template #formView>
-    <form
-      [formGroup]="form"
-      (ngSubmit)="onSubmit()"
-      class="card shadow-sm p-4"
-      style="width: 100%; max-width: 480px;"
-      novalidate
-      autocomplete="off"
-    >
-      <!-- Username field -->
-      <div class="mb-4">
-        <label class="form-label fw-semibold" for="username">Username</label>
+    <ng-template #formCard>
+      <ng-container *ngTemplateOutlet="formFields"></ng-container>
+    </ng-template>
+  </section>
+</ng-container>
 
-        <div class="d-flex gap-2 align-items-center">
-          <input
-            id="username"
-            class="form-control"
-            [class.is-invalid]="usernameCtrl.invalid && usernameCtrl.touched"
-            type="text"
-            formControlName="username"
-            placeholder="e.g. jane_smith"
-            aria-describedby="username-status username-hint"
-            [attr.aria-invalid]="usernameCtrl.invalid && usernameCtrl.touched"
-          />
+<!-- embedded mode: just the form fields, no outer wrapper or card -->
+<ng-template #embeddedForm>
+  <ng-container *ngTemplateOutlet="formFields"></ng-container>
+</ng-template>
 
-          <!-- Status badge -->
-          <span
-            id="username-status"
-            class="badge rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1 text-nowrap"
-            [ngClass]="{
-              'invisible':        checkStatus() === 'idle',
-              'bg-warning text-dark': checkStatus() === 'checking' || checkStatus() === 'error',
-              'bg-success':       checkStatus() === 'available',
-              'bg-danger':        checkStatus() === 'taken'
-            }"
-            role="status"
-            aria-live="polite"
-          >
-            <span *ngIf="checkStatus() === 'checking'" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-            {{ statusLabel() }}
-          </span>
-        </div>
+<!-- shared form template -->
+<ng-template #formFields>
+  <form
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    [class]="embedded() ? '' : 'card shadow-sm p-4'"
+    [style]="embedded() ? '' : 'width: 100%; max-width: 480px;'"
+    novalidate
+    autocomplete="off"
+  >
+    <div class="mb-4">
+      <label class="form-label fw-semibold" for="username">Username</label>
 
-        <div id="username-hint" class="form-text">
-          3–30 characters. Letters, numbers and underscores only.
-        </div>
+      <div class="d-flex gap-2 align-items-center">
+        <input
+          id="username"
+          class="form-control"
+          [class.is-invalid]="usernameCtrl.invalid && usernameCtrl.touched"
+          type="text"
+          formControlName="username"
+          placeholder="e.g. jane_smith"
+          aria-describedby="username-status username-hint"
+          [attr.aria-invalid]="usernameCtrl.invalid && usernameCtrl.touched"
+        />
 
-        <!-- validation errors -->
-        <div
-          *ngIf="usernameCtrl.touched && usernameCtrl.errors as errors"
-          class="text-danger small mt-1"
-          role="alert"
+        <span
+          id="username-status"
+          class="badge rounded-pill px-3 py-2 d-inline-flex align-items-center gap-1 text-nowrap"
+          [ngClass]="{
+            'invisible':            checkStatus() === 'idle',
+            'bg-warning text-dark': checkStatus() === 'checking' || checkStatus() === 'error',
+            'bg-success':           checkStatus() === 'available',
+            'bg-danger':            checkStatus() === 'taken'
+          }"
+          role="status"
+          aria-live="polite"
         >
-          <span *ngIf="errors['required']">Username is required.</span>
-          <span *ngIf="errors['minlength']">Minimum 3 characters.</span>
-          <span *ngIf="errors['maxlength']">Maximum 30 characters.</span>
-          <span *ngIf="errors['pattern']">Only letters, numbers and underscores allowed.</span>
-        </div>
+          <span *ngIf="checkStatus() === 'checking'" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          {{ statusLabel() }}
+        </span>
       </div>
 
-      <!-- Hint: taken usernames for demo purposes -->
-      <details class="small text-muted mb-4 p-2 bg-light border rounded">
-        <summary class="fw-medium" style="cursor: pointer; user-select: none;">Demo: try these taken usernames</summary>
-        <code class="d-block mt-1 text-primary font-monospace">admin, john_doe, superuser, test, angular_dev, root, guest</code>
-      </details>
-
-      <!-- Actions -->
-      <div class="d-flex gap-2">
-        <button
-          type="submit"
-          class="btn btn-primary d-inline-flex align-items-center gap-2"
-          [disabled]="form.invalid || checkStatus() !== 'available' || isSubmitting()"
-        >
-          <span *ngIf="isSubmitting(); else saveLabel" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-          <ng-template #saveLabel>Save Username</ng-template>
-        </button>
-
-        <button type="button" class="btn btn-outline-secondary" (click)="onReset()">
-          Reset
-        </button>
+      <div id="username-hint" class="form-text">
+        3–30 characters. Letters, numbers and underscores only.
       </div>
-    </form>
-  </ng-template>
-</section>
+
+      <!-- validation errors -->
+      <div
+        *ngIf="usernameCtrl.touched && usernameCtrl.errors as errors"
+        class="text-danger small mt-1"
+        role="alert"
+      >
+        <span *ngIf="errors['required']">Username is required.</span>
+        <span *ngIf="errors['minlength']">Minimum 3 characters.</span>
+        <span *ngIf="errors['maxlength']">Maximum 30 characters.</span>
+        <span *ngIf="errors['pattern']">Only letters, numbers and underscores allowed.</span>
+      </div>
+    </div>
+
+    <details class="small text-muted mb-4 p-2 bg-light border rounded">
+      <summary class="fw-medium" style="cursor: pointer; user-select: none;">Demo: try these taken usernames</summary>
+      <code class="d-block mt-1 text-primary font-monospace">admin, john_doe, superuser, test, angular_dev, root, guest</code>
+    </details>
+
+    <div class="d-flex gap-2">
+      <button
+        type="submit"
+        class="btn btn-primary d-inline-flex align-items-center gap-2"
+        [disabled]="form.invalid || checkStatus() !== 'available' || isSubmitting()"
+      >
+        <span *ngIf="isSubmitting(); else saveLabel" class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+        <ng-template #saveLabel>Save Username</ng-template>
+      </button>
+
+      <button type="button" class="btn btn-outline-secondary" (click)="onReset()">
+        Reset
+      </button>
+    </div>
+  </form>
+</ng-template>

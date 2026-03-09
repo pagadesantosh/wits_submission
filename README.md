@@ -1,5 +1,7 @@
 # Username Availability Checker
 
+**Live demo:** https://pagadesantosh.github.io/wits_submission/
+
 An Angular 19 app that lets a user pick a unique username before registering. It checks availability in real time as you type and shows instant feedback.
 
 ## Features
@@ -9,6 +11,15 @@ An Angular 19 app that lets a user pick a unique username before registering. It
 - Async validator hitting a mock service that simulates network latency and occasional failures
 - Signals + OnPush change detection throughout
 - Bootstrap 5 styling, no custom CSS
+- Two routes — standalone page (`/`) and registration page (`/register`) that reuses the same component
+- `UserAvailabilityComponent` supports `[embedded]` input and `(usernameRegistered)` output for reuse
+
+## Routes
+
+| Path | Component | Description |
+|------|-----------|-------------|
+| `/` | `UserAvailabilityComponent` | Standalone full-page username checker |
+| `/register` | `RegistrationComponent` | Registration page that embeds the username component |
 
 ## Project Structure
 
@@ -19,9 +30,16 @@ src/
       username-checker.service.ts          # mock availability API
     shared/validator/
       username-availability.validator.ts   # async validator factory
-    features/user-availability/
-      user-availability.component.ts       # main feature component
-      user-availability.component.html
+    features/
+      user-availability/
+        user-availability.component.ts     # reusable component (embedded input + usernameRegistered output)
+        user-availability.component.html
+      registration/
+        registration.component.ts          # consumes UserAvailabilityComponent
+        registration.component.html
+    app.component.ts                       # navbar + router-outlet
+    app.routes.ts                          # route definitions
+    app.config.ts                          # app providers
 ```
 
 ## Getting Started
@@ -46,6 +64,30 @@ ng build
 ```
 
 Output goes to `dist/wits/`.
+
+## Deploying to GitHub Pages
+
+Install the deploy tool (first time only):
+
+```bash
+npm install angular-cli-ghpages --save-dev
+```
+
+Build with the correct base href — use `MSYS_NO_PATHCONV=1` to prevent Git Bash from converting the path on Windows:
+
+```bash
+MSYS_NO_PATHCONV=1 npx ng build --base-href /wits_submission/
+```
+
+Deploy to the `gh-pages` branch:
+
+```bash
+npx angular-cli-ghpages --dir=dist/wits/browser
+```
+
+Then go to **Settings → Pages** in the GitHub repo, set the source branch to `gh-pages`, and save. The app will be live at:
+
+**https://pagadesantosh.github.io/wits_submission/**
 
 ## Demo Usernames
 
@@ -74,6 +116,15 @@ Combined with Signals, OnPush means the component won't re-render on every paren
 ### Service design
 
 `UsernameCheckerService` is `providedIn: 'root'` so it's a singleton. The taken-usernames set stays consistent regardless of how many times the component is mounted. Swapping the mock for a real `HttpClient` call later means only changing the internals of `checkAvailability` — the rest of the app doesn't care.
+
+### Component reusability — `embedded` input + `usernameRegistered` output
+
+`UserAvailabilityComponent` works in two modes:
+
+- **Standalone** (`[embedded]="false"`, default) — renders its own full-page wrapper, card, and header. Used on the `/` route.
+- **Embedded** (`[embedded]="true"`) — renders just the form fields with no outer layout. Used inside `RegistrationComponent` on `/register`.
+
+The `(usernameRegistered)` output emits the registered username string when the form is submitted successfully, so the parent component can react without knowing any internals.
 
 ---
 
